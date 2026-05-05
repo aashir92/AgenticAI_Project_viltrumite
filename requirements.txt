@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+pydantic
+pydantic-settings
+langchain
+langgraph
+langchain-groq
+requests
+pillow
+rembg
+moviepy
+opencv-python
+numpy
+pyttsx3
+python-multipart
