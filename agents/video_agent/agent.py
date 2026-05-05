@@ -21,10 +21,13 @@ class VideoAgent:
         self.bg_removal_tool = ImageBackgroundRemovalTool()
         self.compositor = ImageCompositorTool()
 
-    def _mouth_open_ratio(self, audio_path: str, t: float) -> float:
+    def _get_audio_data(self, audio_path: str):
         sample_rate, data = wavfile.read(audio_path)
         if data.ndim > 1:
             data = data.mean(axis=1)
+        return sample_rate, data
+
+    def _mouth_open_ratio(self, data, sample_rate: int, t: float) -> float:
         win_samples = int(0.06 * sample_rate)
         center = int(t * sample_rate)
         start = max(0, center - win_samples // 2)
@@ -35,12 +38,11 @@ class VideoAgent:
         loudness = float((abs(chunk).mean()) / 5000.0)
         return float(max(0.0, min(1.0, loudness)))
 
-    def _animate_mouth(self, frame_path: Path, out_path: Path, openness: float) -> Path:
-        img = Image.open(frame_path).convert("RGBA")
+    def _create_mouth_overlay(self, w: int, h: int, out_path: Path) -> Path:
+        img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
-        w, h = img.size
         mouth_w = int(w * 0.08)
-        mouth_h = max(2, int(h * 0.02 + h * 0.03 * openness))
+        mouth_h = int(h * 0.04)
         x = int(w * 0.28)
         y = int(h * 0.74)
         draw.ellipse((x, y, x + mouth_w, y + mouth_h), fill=(120, 20, 20, 220))
@@ -53,57 +55,69 @@ class VideoAgent:
         root = Path("data/outputs") / job_id / "video"
         root.mkdir(parents=True, exist_ok=True)
         clips: List[ImageClip] = []
+        
+        # Generate Characters ONCE for the whole video
+        self.logger.info("Generating characters...")
+        char_layers = []
+        for character in story.characters:
+            c_raw = root / f"char_{character.name}_raw.png"
+            c_cut = root / f"char_{character.name}.png"
+            self.image_tool.run(
+                prompt=f"visual novel character portrait, {character.visual_traits}, speaking pose, transparent-ready",
+                kind="character",
+                output_path=str(c_raw),
+            )
+            self.bg_removal_tool.run(input_path=str(c_raw), output_path=str(c_cut))
+            char_layers.append(
+                {
+                    "path": str(c_cut),
+                    "scale": 0.65,
+                    "position": (120 + len(char_layers) * 580, 180),
+                }
+            )
+
+        # Create one reusable mouth overlay
+        mouth_path = root / "mouth_overlay.png"
+        self._create_mouth_overlay(DEFAULT_VIDEO_RESOLUTION[0], DEFAULT_VIDEO_RESOLUTION[1], mouth_path)
 
         for scene_idx, scene in enumerate(story.scenes):
             bg_path = root / f"{scene.scene_id}_bg.png"
-            self.image_tool.run(prompt=scene.visual_description, kind="background", output_path=str(bg_path))
-
-            char_layers = []
-            for character in story.characters:
-                c_raw = root / f"{scene.scene_id}_{character.name}_raw.png"
-                c_cut = root / f"{scene.scene_id}_{character.name}.png"
-                self.image_tool.run(
-                    prompt=f"visual novel character portrait, {character.visual_traits}, speaking pose, transparent-ready",
-                    kind="character",
-                    output_path=str(c_raw),
-                )
-                self.bg_removal_tool.run(input_path=str(c_raw), output_path=str(c_cut))
-                char_layers.append(
-                    {
-                        "path": str(c_cut),
-                        "scale": 0.65,
-                        "position": (120 + len(char_layers) * 580, 180),
-                    }
-                )
+            bg_prompt = scene.visual_description + ", empty background, no people, no characters, scenic environment"
+            self.image_tool.run(prompt=bg_prompt, kind="background", output_path=str(bg_path))
 
             composite_path = root / f"{scene.scene_id}_composite.png"
             self.compositor.run(background_path=str(bg_path), character_layers=char_layers, output_path=str(composite_path))
 
             scene_entries = [e for e in timing.entries if e.scene_id == scene.scene_id]
             scene_duration = max(scene.duration_seconds, 1)
-            segment_clip = ImageClip(str(composite_path)).set_duration(scene_duration)
-            segment_clip = segment_clip.resize(width=DEFAULT_VIDEO_RESOLUTION[0]).resize(
-                lambda t: 1.0 + 0.03 * (t / scene_duration)
-            )
-            segment_clip = segment_clip.set_position(lambda t: (-20 * (t / scene_duration), -8 * (t / scene_duration)))
-
+            
+            unzoomed_base = ImageClip(str(composite_path)).set_duration(scene_duration)
             animated_overlays = []
+            
             for entry in scene_entries:
                 scene_start_ms = scene_entries[0].start_ms if scene_entries else 0
                 local_start = max(0.0, (entry.start_ms - scene_start_ms) / 1000.0)
                 local_end = max(local_start, (entry.end_ms - scene_start_ms) / 1000.0)
+                
+                # Preload audio data
+                sample_rate, data = self._get_audio_data(entry.audio_file)
+                
                 t_cursor = local_start
                 while t_cursor < local_end:
-                    openness = self._mouth_open_ratio(entry.audio_file, t_cursor - local_start)
-                    mouth_frame = root / f"mouth_{scene.scene_id}_{int(t_cursor*100)}.png"
-                    self._animate_mouth(composite_path, mouth_frame, openness)
-                    overlay = ImageClip(str(mouth_frame)).set_duration(min(0.08, local_end - t_cursor)).set_start(t_cursor)
-                    animated_overlays.append(overlay)
-                    t_cursor += 0.08
+                    openness = self._mouth_open_ratio(data, sample_rate, t_cursor - local_start)
+                    dur = min(0.1, local_end - t_cursor)
+                    if openness > 0.1:
+                        overlay = ImageClip(str(mouth_path)).set_duration(dur).set_start(t_cursor)
+                        animated_overlays.append(overlay)
+                    t_cursor += 0.1
 
-            scene_video = CompositeVideoClip([segment_clip, *animated_overlays], size=DEFAULT_VIDEO_RESOLUTION).set_duration(
-                scene_duration
-            )
+            unzoomed_scene = CompositeVideoClip([unzoomed_base, *animated_overlays], size=DEFAULT_VIDEO_RESOLUTION).set_duration(scene_duration)
+            
+            # Apply camera pan/zoom to the composited scene so the mouth doesn't float away
+            scene_video = unzoomed_scene.resize(width=DEFAULT_VIDEO_RESOLUTION[0]).resize(
+                lambda t: 1.0 + 0.03 * (t / scene_duration)
+            ).set_position(lambda t: (-20 * (t / scene_duration), -8 * (t / scene_duration)))
+            
             clips.append(scene_video)
             self.logger.info("Scene %s prepared.", scene.scene_id)
 

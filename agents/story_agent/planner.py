@@ -12,7 +12,7 @@ def build_story_prompt(user_prompt: str) -> str:
         HARD RULES:
         1) Exactly two characters.
         2) Total runtime approximately 1 minute (50-70s).
-        3) 3-8 scenes with clear progression.
+        3) 2-3 scenes maximum with clear progression.
         4) Dialogues only spoken by the two characters.
         5) Visual descriptions must be suitable for visual-novel-style image generation.
 
