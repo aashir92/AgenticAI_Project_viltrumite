@@ -97,7 +97,7 @@ class EditRequest(BaseModel):
 
 class EditIntent(BaseModel):
     intent: str
-    target: Literal["audio", "video_frame", "video", "script"]
+    target: Literal["audio", "video_frame", "video", "script", "system"]
     confidence: float = Field(ge=0.0, le=1.0)
     params: Dict[str, Any] = Field(default_factory=dict)
 

@@ -25,12 +25,13 @@ class PipelineService:
     async def run_job(self, job_id: str) -> None:
         state = self.jobs[job_id]
         try:
+            loop = asyncio.get_running_loop()
             graph = build_pipeline_graph(
-                progress_cb=lambda phase, status, percent, meta: asyncio.create_task(
-                    self._emit(job_id, phase, status, percent, meta)
+                progress_cb=lambda phase, status, percent, meta: asyncio.run_coroutine_threadsafe(
+                    self._emit(job_id, phase, status, percent, meta), loop
                 )
             )
-            out = graph.invoke({"job_id": job_id, "user_prompt": state["user_prompt"]})
+            out = await graph.ainvoke({"job_id": job_id, "user_prompt": state["user_prompt"]})
             state["status"] = "completed"
             state["final_video_path"] = out.get("final_video_path")
             await self._emit(job_id, "done", "completed", 100, {"final_video_path": state["final_video_path"]})

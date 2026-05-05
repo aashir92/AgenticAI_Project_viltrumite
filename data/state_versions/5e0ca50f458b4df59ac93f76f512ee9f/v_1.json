@@ -1,0 +1,78 @@
+{
+  "job_id": "5e0ca50f458b4df59ac93f76f512ee9f",
+  "user_prompt": "A rainy rooftop argument between two friends\n",
+  "status": "completed",
+  "events": [
+    {
+      "phase": "story",
+      "status": "running",
+      "percent": 15,
+      "meta": {
+        "msg": "Generating story"
+      }
+    },
+    {
+      "phase": "story",
+      "status": "completed",
+      "percent": 30,
+      "meta": {
+        "story_spec_path": "data\\outputs\\5e0ca50f458b4df59ac93f76f512ee9f\\story_spec.json"
+      }
+    },
+    {
+      "phase": "audio",
+      "status": "running",
+      "percent": 45,
+      "meta": {
+        "msg": "Generating voice lines"
+      }
+    },
+    {
+      "phase": "audio",
+      "status": "completed",
+      "percent": 65,
+      "meta": {
+        "timing_manifest_path": "data\\outputs\\5e0ca50f458b4df59ac93f76f512ee9f\\audio\\timing_manifest.json"
+      }
+    },
+    {
+      "phase": "video",
+      "status": "running",
+      "percent": 80,
+      "meta": {
+        "msg": "Rendering final video"
+      }
+    },
+    {
+      "phase": "video",
+      "status": "completed",
+      "percent": 100,
+      "meta": {
+        "final_video_path": "data\\outputs\\5e0ca50f458b4df59ac93f76f512ee9f\\video\\final_output.mp4"
+      }
+    },
+    {
+      "phase": "done",
+      "status": "completed",
+      "percent": 100,
+      "meta": {
+        "final_video_path": "data\\outputs\\5e0ca50f458b4df59ac93f76f512ee9f\\video\\final_output.mp4"
+      }
+    }
+  ],
+  "created_at": "2026-05-05T20:49:25.374842+00:00",
+  "final_video_path": "data\\outputs\\5e0ca50f458b4df59ac93f76f512ee9f\\video\\final_output.mp4",
+  "updated_at": "2026-05-05T20:58:25.458713+00:00",
+  "edits": [
+    {
+      "intent": "remove",
+      "target": "video_frame",
+      "params": {
+        "objects": "characters",
+        "action": "remove_from_background"
+      },
+      "rerender_required": true
+    }
+  ],
+  "last_edit_target": "video_frame"
+}

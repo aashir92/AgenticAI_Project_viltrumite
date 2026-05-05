@@ -1,0 +1,38 @@
+======================================== test session starts ========================================
+platform win32 -- Python 3.10.20, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\HP\miniconda3\envs\agenticai\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\HP\Desktop\FAST\8th-sem\Agentic AI\project\Agentic Project\Agentic Project
+plugins: anyio-4.13.0
+collected 29 items                                                                                   
+
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentState::test_initial_state_empty PASSED [  3%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentState::test_initial_state_with_data PASSED [  6%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentState::test_apply_updates_state PASSED [ 10%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentState::test_apply_pushes_to_undo_stack PASSED [ 13%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentState::test_undo_restores_previous_state PASSED [ 17%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentState::test_undo_empty_stack_returns_false PASSED [ 20%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentState::test_multiple_undo_levels PASSED [ 24%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentState::test_can_undo_false_initially PASSED [ 27%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentState::test_state_deep_copied_on_apply PASSED [ 31%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentClassification::test_character_visuals_query PASSED [ 34%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentClassification::test_background_visuals_query PASSED [ 37%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentClassification::test_undo_query_with_history PASSED [ 41%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentClassification::test_undo_query_nothing_to_undo PASSED [ 44%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentClassification::test_audio_emotion_query PASSED [ 48%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentClassification::test_script_dialogue_query PASSED [ 51%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentClassification::test_regenerate_query PASSED [ 55%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentClassification::test_speed_query PASSED [ 58%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentClassification::test_scene_duration_query PASSED [ 62%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentClassification::test_subtitle_query PASSED [ 65%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentClassification::test_music_query PASSED [ 68%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentClassification::test_unknown_intent_query PASSED [ 72%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentClassification::test_multi_edit_and_undo_chain PASSED [ 75%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentClassifySchema::test_classify_returns_edit_intent PASSED [ 79%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentClassifySchema::test_classify_maps_target_correctly PASSED [ 82%]
+agents/edit_agent/tests/test_edit_agent.py::TestEditAgentClassifySchema::test_classify_undo_maps_to_system PASSED [ 86%]
+agents/edit_agent/tests/test_edit_agent.py::TestPhaseLevelContracts::test_edit_agent_state_input_output PASSED [ 89%]
+agents/edit_agent/tests/test_edit_agent.py::TestPhaseLevelContracts::test_handle_output_is_edit_result PASSED [ 93%]
+agents/edit_agent/tests/test_edit_agent.py::TestPhaseLevelContracts::test_handle_with_none_params_does_not_crash PASSED [ 96%]
+agents/edit_agent/tests/test_edit_agent.py::TestPhaseLevelContracts::test_undo_stack_isolation_between_states PASSED [100%]
+
+======================================== 29 passed in 2.77s =========================================

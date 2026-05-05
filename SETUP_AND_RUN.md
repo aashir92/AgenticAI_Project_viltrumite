@@ -1,630 +1,260 @@
-# 🚀 Agentic AI Project - Complete Setup & Running Guide
+# Setup & Run Guide — Agentic AI Video Pipeline
 
-## 📋 Table of Contents
-1. [Project Overview](#project-overview)
-2. [System Requirements](#system-requirements)
-3. [Project Architecture](#project-architecture)
-4. [Installation & Setup](#installation--setup)
-5. [Running the Application](#running-the-application)
-6. [API Documentation](#api-documentation)
-7. [Troubleshooting](#troubleshooting)
-8. [Project Structure](#project-structure)
+This guide takes you from **zero to a running pipeline** on a fresh Windows machine.  
+Estimated time: **10-15 minutes**.
 
 ---
 
-## 📺 Project Overview
+## Prerequisites
 
-This is an **AI-Powered Animated Video Generation System** that automatically creates animated videos from text prompts. The system orchestrates multiple specialized AI agents to:
+Install these before starting:
 
-1. **Generate stories** from user prompts (plot, dialogue, scene structure)
-2. **Produce audio** with text-to-speech and background music
-3. **Create visuals** with AI-generated images and animations
-4. **Render final videos** with synchronized audio and visuals
-5. **Allow post-production edits** via an interactive edit agent
+| Tool | Version | Download |
+|------|---------|----------|
+| **Miniconda** (or Anaconda) | latest | https://docs.conda.io/en/latest/miniconda.html |
+| **Node.js** | 18+ | https://nodejs.org |
+| **Git** | latest | https://git-scm.com |
+| **ffmpeg** | latest | https://ffmpeg.org/download.html — add to PATH |
 
-### 🎯 Key Features
-- ✅ End-to-end automated video generation
-- ✅ Real-time progress tracking with WebSocket
-- ✅ Multi-agent orchestration with LangGraph
-- ✅ Intelligent post-production editing
-- ✅ State management with undo/redo capabilities
-- ✅ Full-stack application (Python backend + React frontend)
+> **Windows TTS note**: The audio agent uses Windows built-in SAPI5 voices (Microsoft David & Zira). No install needed — they come with Windows 10/11.
 
 ---
 
-## 🖥️ System Requirements
+## Step 1 — Clone the Repository
 
-### Prerequisites
-- **Python 3.9 or higher** - Backend runtime
-- **Node.js 16 or higher** - Frontend build and development
-- **FFmpeg** - Video processing (must be in system PATH)
-- **Git** (optional) - Version control
-- **4GB+ RAM** - For AI model inference
-- **Internet connection** - For API calls (Groq, HuggingFace)
-
-### API Keys Required
-You'll need accounts and API keys for:
-1. **Groq API** - For LLM (text generation)
-   - Sign up: https://console.groq.com
-   - Get key from API keys section
-2. **HuggingFace** - For image generation and processing
-   - Sign up: https://huggingface.co
-   - Get token from settings/tokens section
-
----
-
-## 🏗️ Project Architecture
-
-### High-Level Data Flow
-```
-User Prompt 
-    ↓
-Frontend (React UI)
-    ↓ HTTP/WebSocket
-Backend (FastAPI)
-    ↓
-Orchestrator (LangGraph Workflow)
-    ├─ Story Agent (Generate story structure)
-    ├─ Audio Agent (Generate dialogue & audio)
-    ├─ Video Agent (Generate visuals & render)
-    └─ Edit Agent (Post-production edits)
-    ↓
-Tools (LLM, Vision, Audio, Video, System)
-    ↓
-Final Video Output
-```
-
-### Technology Stack
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| Backend API | FastAPI + Uvicorn | REST API & WebSocket |
-| Orchestration | LangGraph | State machine workflow |
-| Agent Framework | LangChain | AI agent implementation |
-| LLM | Groq API (llama-3.3-70b) | Text generation |
-| Vision AI | Hugging Face (SDXL) | Image generation |
-| Audio | Coqui TTS | Text-to-speech |
-| Video | MoviePy + FFmpeg | Video composition |
-| Frontend | React 18 + TypeScript + Vite | User interface |
-
-### Directory Structure
-```
-Agentic Project/
-├── backend/                  # FastAPI backend
-│   ├── app.py               # Main application
-│   ├── routes/              # API endpoints
-│   ├── services/            # Business logic
-│   └── websocket/           # WebSocket handlers
-├── agents/                  # AI agents
-│   ├── story_agent/         # Story generation
-│   ├── audio_agent/         # Audio production
-│   ├── video_agent/         # Video rendering
-│   ├── edit_agent/          # Post-production editing
-│   └── orchestrator/        # Workflow coordination
-├── mcp/                     # Tool abstraction layer
-│   ├── tools/               # Audio, video, vision, LLM tools
-│   ├── base_tool.py        # Tool interface
-│   └── tool_registry.py    # Tool management
-├── state_manager/          # State & version control
-├── shared/                 # Shared schemas & utilities
-│   ├── schemas/            # Data models
-│   ├── constants/          # Constants
-│   └── utils/              # Utility functions
-├── frontend/               # React application
-│   ├── src/               # React components
-│   ├── index.html         # HTML entry point
-│   └── package.json       # Node dependencies
-├── data/                   # Data storage (generated)
-│   ├── outputs/           # Generated videos
-│   ├── temp/              # Temporary files
-│   └── state_versions/    # State snapshots
-├── scripts/               # Startup scripts
-├── requirements.txt       # Python dependencies
-└── Readme.md             # Project readme
-```
-
----
-
-## 📦 Installation & Setup
-
-### Step 1: Clone or Extract Project
 ```bash
-cd "c:\Users\HP\Desktop\FAST\8th-sem\Agentic AI\project\Agentic Project\Agentic Project"
+git clone <your-repo-url>
+cd "Agentic Project"
 ```
 
-### Step 2: Install FFmpeg
-**Windows (using Chocolatey):**
-```powershell
-choco install ffmpeg
-```
+---
 
-**Windows (Manual Installation):**
-1. Download FFmpeg from: https://ffmpeg.org/download.html
-2. Extract to a folder (e.g., `C:\ffmpeg`)
-3. Add to PATH environment variable
-4. Verify: `ffmpeg -version` in terminal
+## Step 2 — Create the Conda Environment
 
-**Linux/Mac:**
 ```bash
-# Ubuntu/Debian
-sudo apt-get install ffmpeg
-
-# Mac (Homebrew)
-brew install ffmpeg
+conda create -n agenticai python=3.10 -y
+conda activate agenticai
 ```
 
-### Step 3: Create Environment File
-Create a `.env` file in the project root:
+---
+
+## Step 3 — Install Python Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+This installs: `fastapi`, `uvicorn`, `langchain`, `langchain-groq`, `langgraph`, `moviepy`, `Pillow`, `rembg`, `scipy`, `pyttsx3`, `pydantic`, `python-dotenv`, `pytest`, `requests`, and more.
+
+> **rembg** (background removal) downloads a ~170 MB model on first run. This is normal — it only downloads once.
+
+---
+
+## Step 4 — Configure Environment Variables
+
+```bash
+copy .env.example .env
+```
+
+Open `.env` in any text editor and fill in:
+
 ```env
-# Groq API Configuration
 GROQ_API_KEY=your_groq_api_key_here
 GROQ_MODEL=llama-3.3-70b-versatile
-
-# HuggingFace Configuration
-HUGGINGFACE_API_KEY=your_huggingface_token_here
-HF_IMAGE_MODEL=stabilityai/stable-diffusion-xl-base-1.0
-HF_REMOVE_BG_MODEL=briaai/RMBG-1.4
-
-# TTS Configuration
-TTS_MODEL_NAME=tts_models/en/vctk/vits
-
-# Backend Configuration
-BACKEND_HOST=0.0.0.0
-BACKEND_PORT=8000
 FRONTEND_ORIGIN=http://localhost:5173
 ```
 
-### Step 4: Install Python Dependencies
-```powershell
-# Navigate to project root if not already there
-cd "c:\Users\HP\Desktop\FAST\8th-sem\Agentic AI\project\Agentic Project\Agentic Project"
+**Getting a free Groq API key:**
+1. Go to https://console.groq.com
+2. Sign up (free)
+3. Create an API key under **API Keys**
+4. Paste it into `.env`
 
-# Create virtual environment (optional but recommended)
-python -m venv venv
-.\venv\Scripts\Activate.ps1
+> Pollinations.ai (image generation) requires **no API key** — it's completely free and automatic.
 
-# Install dependencies
-pip install -r requirements.txt
+---
 
-# Verify installation
-python -c "import langchain; import fastapi; print('✓ All dependencies installed')"
-```
+## Step 5 — Install Frontend Dependencies
 
-### Step 5: Install Frontend Dependencies
-```powershell
+```bash
 cd frontend
 npm install
 cd ..
 ```
 
-### Step 6: Verify Installation
-```powershell
-# Check Python packages
-pip list | findstr fastapi langchain langchain-groq
+---
 
-# Check Node packages
-cd frontend && npm list react && cd ..
+## Step 6 — Run the Backend
 
-# Check FFmpeg
-ffmpeg -version
+Open a terminal in the project root:
+
+```bash
+conda activate agenticai
+uvicorn backend.app:app --reload --host 0.0.0.0 --port 8001
 ```
+
+You should see:
+```
+INFO:     Uvicorn running on http://0.0.0.0:8001
+INFO:     Application startup complete.
+```
+
+> **Keep this terminal open** — the backend runs continuously.
 
 ---
 
-## ▶️ Running the Application
+## Step 7 — Run the Frontend
 
-### Option A: Using Provided Scripts (Recommended for Windows)
+Open a **second terminal** in the project root:
 
-**Terminal 1 - Start Backend:**
-```powershell
-# From project root
-.\scripts\start_backend.ps1
-```
-
-**Terminal 2 - Start Frontend:**
-```powershell
-# From project root
-.\scripts\start_frontend.ps1
-```
-
-**Terminal 3 - Monitor Logs (Optional):**
-```powershell
-Get-Content "data/logs.txt" -Wait
-```
-
-### Option B: Manual Start (All Platforms)
-
-**Terminal 1 - Start Backend:**
-```bash
-# Windows PowerShell
-uvicorn backend.app:app --reload --host 0.0.0.0 --port 8000
-
-# Linux/Mac
-python -m uvicorn backend.app:app --reload --host 0.0.0.0 --port 8000
-```
-
-**Terminal 2 - Start Frontend:**
 ```bash
 cd frontend
 npm run dev
 ```
 
-### Step: Access the Application
-
-Once both services are running:
-
-1. **Frontend Application**
-   - URL: http://localhost:5173
-   - You should see the video generation interface
-
-2. **Backend API**
-   - Health Check: http://localhost:8000/health
-   - API Docs (Swagger): http://localhost:8000/docs
-   - ReDoc: http://localhost:8000/redoc
-
-3. **Monitor Real-time Progress**
-   - Backend logs will show: "Phase: Story Generation" → "Audio Production" → "Video Rendering"
-   - Frontend displays real-time progress bar
-
----
-
-## 🔄 Typical Workflow
-
-1. **Open Frontend** (http://localhost:5173)
-2. **Enter Prompt** - Describe the video you want to generate
-3. **Submit** - Click "Generate Video"
-4. **Monitor Progress**
-   - Watch real-time progress on frontend
-   - Backend logs show agent execution
-5. **Wait for Completion** - Can take 2-10 minutes depending on complexity
-6. **View Generated Video** - Auto-plays when ready
-7. **Edit (Optional)** - Use edit panel for post-production changes
-8. **Download/Save** - Save the final video
-
----
-
-## 📚 API Documentation
-
-### REST Endpoints
-
-#### Start Video Generation
+You should see:
 ```
-POST /api/pipeline/start
-Content-Type: application/json
-
-Request:
-{
-  "prompt": "Create a 60-second story about a space explorer discovering a new planet"
-}
-
-Response:
-{
-  "job_id": "job_12345",
-  "status": "queued",
-  "message": "Video generation started"
-}
-```
-
-#### Get Job Status
-```
-GET /api/pipeline/{job_id}
-
-Response:
-{
-  "job_id": "job_12345",
-  "status": "in_progress",
-  "current_phase": "video_generation",
-  "progress": 75,
-  "events": [
-    {
-      "timestamp": "2024-01-20T10:30:00",
-      "phase": "story_generation",
-      "message": "Story structure generated successfully"
-    }
-  ]
-}
-```
-
-### WebSocket Connection
-
-For real-time progress:
-```
-WebSocket: ws://localhost:8000/ws/progress/{job_id}
-
-Messages:
-{
-  "phase": "audio_generation",
-  "progress": 45,
-  "message": "Generating dialogue audio..."
-}
-```
-
-### Full API Documentation
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-
----
-
-## 🛠️ Troubleshooting
-
-### Backend Won't Start
-
-**Error: `ModuleNotFoundError: No module named 'fastapi'`**
-```bash
-# Solution: Install dependencies
-pip install -r requirements.txt
-```
-
-**Error: `Port 8000 already in use`**
-```bash
-# Windows
-netstat -ano | findstr :8000
-taskkill /PID <PID> /F
-
-# Linux/Mac
-lsof -i :8000
-kill -9 <PID>
-
-# Or use different port
-uvicorn backend.app:app --port 8001
-```
-
-**Error: `GROQ_API_KEY not found`**
-```bash
-# Verify .env file exists in project root with:
-# GROQ_API_KEY=your_actual_key
-# Restart backend after adding .env
-```
-
-### Frontend Won't Start
-
-**Error: `npm: command not found`**
-```bash
-# Install Node.js from https://nodejs.org
-# Or on Windows with chocolatey:
-choco install nodejs
-```
-
-**Error: `npm ERR! ERESOLVE unable to resolve dependency tree`**
-```bash
-cd frontend
-npm install --legacy-peer-deps
-cd ..
-```
-
-**Port 5173 already in use**
-```bash
-cd frontend
-npm run dev -- --port 5174  # Use different port
-```
-
-### Video Generation Issues
-
-**Error: `FFmpeg not found`**
-```bash
-# Verify FFmpeg in PATH
-ffmpeg -version
-
-# If not found, reinstall and add to PATH
-# Windows: setx PATH "%PATH%;C:\ffmpeg\bin"
-```
-
-**Error: `CUDA out of memory`**
-- Reduce video resolution in shared/constants/__init__.py
-- Or reduce DEFAULT_VIDEO_FPS from 24 to 12
-
-**Error: `HuggingFace model download failed`**
-```bash
-# Ensure internet connection
-# Check HuggingFace token: HUGGINGFACE_API_KEY in .env
-# Models will download automatically on first use
-```
-
-### WebSocket Connection Issues
-
-**Problem: Real-time progress not updating**
-- Ensure both backend and frontend are running
-- Check browser console for errors (F12 in browser)
-- Verify WebSocket URL matches: ws://localhost:8000/ws/progress/{job_id}
-
----
-
-## 📊 Monitoring & Debugging
-
-### Check Backend Logs
-```powershell
-# Real-time logs
-Get-Content "data/logs.txt" -Wait
-
-# Or from backend startup you'll see:
-# INFO:     Uvicorn running on http://0.0.0.0:8000
-# INFO:     Press CTRL+C to quit
-```
-
-### Check Frontend Logs
-- Open browser DevTools: F12 or Right-Click → Inspect
-- Check Console tab for errors
-- Check Network tab for API requests
-
-### Check Job Status
-```bash
-# Query job status
-curl http://localhost:8000/api/pipeline/job_12345 | python -m json.tool
-```
-
-### View Generated Files
-```bash
-# Output directory
-cd data/outputs/{job_id}
-ls -la  # Linux/Mac
-dir     # Windows
+  VITE v5.x.x  ready in XXXms
+  -> Local:   http://localhost:5173/
 ```
 
 ---
 
-## 📁 Output Files Location
+## Step 8 — Open the App
 
-After generation, files are saved in:
+Open your browser and go to: **http://localhost:5173**
+
+Type any story prompt and click **Generate** — the pipeline will:
+1. Generate a story with Groq LLM
+2. Create TTS audio for each dialogue line
+3. Generate character images via Pollinations.ai
+4. Remove backgrounds from character sprites
+5. Composite animated video scenes
+6. Produce a final MP4 in `data/outputs/{job_id}/video/final_output.mp4`
+
+---
+
+## Running the Tests
+
+Make sure you're in the project root with `agenticai` activated.
+
+### Unit Tests (no API key needed — runs in ~5 seconds)
+
+```bash
+conda activate agenticai
+python -m pytest tests/unit/ -v
+```
+
+Tests covered:
+- All Pydantic schemas (validation, boundaries, error cases)
+- VideoAgent mouth-ratio math and geometry constants
+
+### Edit Agent Unit Tests (no API key needed — runs in ~3 seconds)
+
+```bash
+python -m pytest agents/edit_agent/tests/test_edit_agent.py -v
+```
+
+Tests covered:
+- EditAgentState apply/undo stack
+- Intent classification mocking
+- Undo stack isolation between states
+
+### Integration Tests (requires `GROQ_API_KEY` — runs in ~60 seconds)
+
+```bash
+python -m pytest tests/integration/ -v
+```
+
+Tests covered:
+- Live Groq LLM classification for all 10 intent types
+- State mutation (character, background, audio, script, duration overrides)
+- Multi-level undo chains
+- State isolation between independent jobs
+
+### All Tests Together
+
+```bash
+python -m pytest tests/ agents/edit_agent/tests/ -v
+```
+
+Expected result: **74 passed** (29 edit unit + 45 schema/video unit + 21 integration — but exact count varies with how many integration tests run)
+
+---
+
+## Running the Edit Agent Demo
+
+This runs a scripted 11-step demo showing the Edit Agent in action (live Groq LLM):
+
+```bash
+conda activate agenticai
+python scripts/demo_edit_agent.py
+```
+
+You'll see each edit query classified with intent, confidence, extracted params, and undo stack depth.
+
+---
+
+## Generated Output Files
+
+After a successful generation, look in `data/outputs/{job_id}/`:
+
 ```
 data/outputs/{job_id}/
-├── story_spec.json           # Generated story structure
+├── story_spec.json           # The generated story structure
+├── timing_manifest.json      # Per-line audio timing
 ├── audio/
-│   ├── master_dialogue.wav   # Combined audio track
-│   └── timing_manifest.json  # Lip-sync timing info
-├── video/
-│   ├── final_output.mp4      # Final rendered video
-│   ├── background_*.png      # Generated backgrounds
-│   └── character_*.png       # Generated character images
-└── job_state.json            # Job completion state
+│   ├── scene1_line0.wav      # TTS audio per dialogue line
+│   └── master.wav            # Concatenated master audio
+└── video/
+    ├── char_Alice_raw.png    # Raw generated character
+    ├── char_Alice.png        # Background-removed sprite
+    ├── scene1_bg.png         # Generated background
+    ├── mouth_overlay.png     # Mouth animation overlay
+    └── final_output.mp4      # The final video!
 ```
 
-### Download Generated Video
-1. Video auto-plays in frontend when ready
-2. Right-click → "Save video as..." to download
-3. Or access directly from: `data/outputs/{job_id}/video/final_output.mp4`
-
----
-
-## 🚀 Advanced Configuration
-
-### Modify Video Parameters
-Edit `shared/constants/__init__.py`:
-```python
-DEFAULT_VIDEO_FPS = 24              # Frames per second
-DEFAULT_VIDEO_RESOLUTION = (1280, 720)  # Width x Height
-DEFAULT_TARGET_DURATION_SECONDS = 60    # Target video length
+Edit history is saved to `data/state_versions/{job_id}/`:
 ```
-
-### Change LLM Model
-Edit `.env`:
-```env
-GROQ_MODEL=mixtral-8x7b-32768  # Or other Groq models
-```
-
-### Add Custom Tools
-1. Create tool class in `mcp/tools/custom_tools/`
-2. Inherit from `base_tool.BaseTool`
-3. Register in `mcp/tool_registry.py`
-
----
-
-## 📞 Support & Resources
-
-### Key Files to Understand
-- **Workflow**: `agents/orchestrator/workflow.py`
-- **State Management**: `state_manager/state_manager.py`
-- **API Endpoints**: `backend/routes/`
-- **Agent Logic**: `agents/{agent_name}/agent.py`
-
-### External Resources
-- LangChain Docs: https://python.langchain.com
-- LangGraph Docs: https://langchain-ai.github.io/langgraph/
-- FastAPI Docs: https://fastapi.tiangolo.com
-- Groq API: https://console.groq.com
-
----
-
-## ⚙️ Performance Tips
-
-1. **First Run Takes Longer**
-   - Models download automatically (1-2GB total)
-   - Subsequent runs are faster
-
-2. **Optimize for Speed**
-   - Reduce video resolution in constants
-   - Use shorter prompts (fewer scenes = faster)
-   - Run on machine with GPU if available
-
-3. **Optimize for Quality**
-   - Increase video resolution
-   - Use longer, detailed prompts
-   - Allow more time for processing
-
----
-
-## 🔐 Security Notes
-
-1. **Keep API Keys Safe**
-   - Never commit `.env` to version control
-   - Don't share `.env` file
-   - Regenerate keys if exposed
-
-2. **Network Security**
-   - Backend runs on `localhost:8000` by default
-   - In production, use proper HTTPS and authentication
-   - Change `FRONTEND_ORIGIN` for production
-
----
-
-## 📝 Environment Variables Summary
-
-```env
-# Required
-GROQ_API_KEY=your_groq_key
-HUGGINGFACE_API_KEY=your_hf_token
-
-# Optional (defaults provided)
-GROQ_MODEL=llama-3.3-70b-versatile
-TTS_MODEL_NAME=tts_models/en/vctk/vits
-HF_IMAGE_MODEL=stabilityai/stable-diffusion-xl-base-1.0
-HF_REMOVE_BG_MODEL=briaai/RMBG-1.4
-BACKEND_HOST=0.0.0.0
-BACKEND_PORT=8000
-FRONTEND_ORIGIN=http://localhost:5173
+data/state_versions/{job_id}/
+├── history.json              # Ordered version list
+├── v_1.json                  # State after edit 1
+├── v_2.json                  # State after edit 2
+└── v_3.json                  # State after undo (reverted)
 ```
 
 ---
 
-## ✅ Quick Start Checklist
+## Troubleshooting
 
-- [ ] Python 3.9+ installed
-- [ ] Node.js 16+ installed
-- [ ] FFmpeg installed and in PATH
-- [ ] Groq API key obtained
-- [ ] HuggingFace token obtained
-- [ ] `.env` file created with API keys
-- [ ] Dependencies installed: `pip install -r requirements.txt`
-- [ ] Frontend dependencies installed: `npm install` in `frontend/`
-- [ ] Backend started: `.\scripts\start_backend.ps1`
-- [ ] Frontend started: `.\scripts\start_frontend.ps1`
-- [ ] Frontend accessible at http://localhost:5173
-- [ ] Backend API docs at http://localhost:8000/docs
+### `GroqError: The api_key client option must be set`
+→ Your `.env` file is missing or `GROQ_API_KEY` is not set. Check Step 4.
 
----
+### `rembg` download on first run
+→ Normal — it downloads the u2net model (~170 MB) once. Just wait.
 
-## 🎬 Example Prompts to Try
+### `ffmpeg` not found / video encoding errors
+→ Install ffmpeg and make sure it's in your system PATH.
 
-1. **Short Story**
-   > "Create a 30-second animated story about a cat discovering a mysterious box in an ancient library"
+### `UnicodeEncodeError` in terminal
+→ This is a Windows codepage issue with emoji. The demo script handles this automatically with `sys.stdout.reconfigure(encoding="utf-8")`.
 
-2. **Educational Content**
-   > "Generate a 60-second educational video explaining how photosynthesis works"
+### Port 8001 already in use
+→ Kill the existing process: `netstat -ano | findstr 8001`, then `taskkill /PID <pid> /F`
 
-3. **Fantasy Adventure**
-   > "Create an animated fantasy sequence about a knight battling a dragon in a magical kingdom"
+### Frontend can't reach backend (CORS errors)
+→ Make sure `FRONTEND_ORIGIN=http://localhost:5173` is set in `.env` and the backend is running on port 8001.
 
 ---
 
-## 📄 License & Attribution
+## API Endpoints
 
-This project demonstrates:
-- LangChain & LangGraph for agent orchestration
-- FastAPI for backend API
-- React for frontend UI
-- Integration with Groq, HuggingFace, and other AI APIs
-
----
-
-## 🤝 Contributing
-
-To extend this project:
-1. Add new agents in `agents/`
-2. Register tools in `mcp/tools/`
-3. Extend state in `agents/orchestrator/state.py`
-4. Add new API routes in `backend/routes/`
-5. Update frontend components in `frontend/src/components/`
-
----
-
-**Last Updated**: January 2025
-**Version**: 1.0
-**Status**: Production Ready ✅
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/pipeline/start` | Start video generation |
+| `GET` | `/api/pipeline/{job_id}` | Get job status |
+| `GET` | `/api/assets/{job_id}/video` | Download final video |
+| `POST` | `/api/edit/{job_id}` | Apply a natural-language edit |
+| `POST` | `/api/edit/{job_id}/undo` | Undo last edit |
+| `WS` | `/ws/progress/{job_id}` | Real-time progress updates |
+| `GET` | `/health` | Backend health check |
