@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from io import BytesIO
 from pathlib import Path
 from typing import Any, Dict
 
-import requests
 from PIL import Image
+from huggingface_hub import InferenceClient
 
 from mcp.base_tool import BaseTool
 from shared.utils import get_settings
@@ -17,11 +16,10 @@ class HFImageGenTool(BaseTool):
 
     def _call_hf(self, model: str, prompt: str) -> Image.Image:
         settings = get_settings()
-        url = f"https://api-inference.huggingface.co/models/{model}"
-        headers = {"Authorization": f"Bearer {settings.huggingface_api_key}"}
-        res = requests.post(url, headers=headers, json={"inputs": prompt}, timeout=180)
-        res.raise_for_status()
-        return Image.open(BytesIO(res.content)).convert("RGBA")
+        client = InferenceClient(model=model, token=settings.huggingface_api_key)
+        # Using InferenceClient automatically handles correct routing and retries
+        image = client.text_to_image(prompt)
+        return image.convert("RGBA")
 
     def run(self, **kwargs: Any) -> Dict[str, Any]:
         prompt = kwargs["prompt"]
